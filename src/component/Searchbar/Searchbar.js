@@ -18,12 +18,12 @@ class Searchbar extends Component {
       return;
     }
     this.props.onSubmit(this.state.text);
-    // this.reset();
+    this.reset();
   };
 
-  // reset = () => {
-  //   this.setState({ text: '' });
-  // };
+  reset = () => {
+    this.setState({ text: '' });
+  };
   render() {
     return (
       <header className={s.Searchbar}>
@@ -32,6 +32,7 @@ class Searchbar extends Component {
             <span className={s.lable}></span>
           </button>
           <input
+            value={this.state.text}
             onChange={this.hendleChange}
             className={s.input}
             type="text"

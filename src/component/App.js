@@ -2,64 +2,81 @@ import React, { Component } from 'react';
 import Container from '../component/Container/Container';
 //====================================
 import Searchbar from './Searchbar/Searchbar';
-// import ImageGallery from './ImageGallery/ImageGallery';
+import ImageGallery from './ImageGallery/ImageGallery';
+import Spiner from './Loader/Loader';
+import Modal from './Modal/Modal';
+
+const Status = {
+  IDLE: 'idle', // стоїть на місці
+  PENDING: 'pending', // очікується
+  RESOLVED: 'resolved', // виконалось
+  REJECTED: 'rejected', // відхилено
+};
 
 class App extends Component {
   state = {
     text: '',
-    // page: 1,
+    page: 1,
     images: [],
     loading: false,
+    error: null,
+    status: Status.IDLE,
+    showModal: false,
+    largeImageURL: null,
   };
+
   componentDidUpdate(prevProps, prevState) {
     const prevName = prevState.text;
     const nextName = this.state.text;
     const API_KEY = '22963284-23f543f8627e95ac39317c785';
-
+    const per_page = 12;
     if (prevName !== nextName) {
-      console.log('изменилось имя');
+      const { page } = this.state;
+      this.setState({ status: Status.PENDING });
 
-      this.setState({ loading: true });
-      setTimeout(() => {
-        fetch(
-          `https://pixabay.com/api/?image_type=photo&orientation=horizontal&q=${nextName}&per_page=12&key=${API_KEY}`,
-        )
-          .then(res => res.json())
-          .then(images => this.setState({ images }))
-          .finally(() => this.setState({ loading: false }));
-      }, 1000);
+      fetch(
+        `https://pixabay.com/api/?image_type=photo&orientation=horizontal&q=${nextName}&page=${page}&per_page=${per_page}&key=${API_KEY}`,
+      )
+        .then(res => {
+          if (res.ok) {
+            return res.json();
+          }
+          return Promise.reject(new Error(`Нет такой картинки ${nextName}`));
+        })
+        .then(images => {
+          this.setState(state => ({
+            images: [...state.images, ...images.hits],
+            page: page + 1,
+            status: Status.RESOLVED,
+          }));
+        })
+        .catch(error => this.setState({ error, status: Status.REJECTED }));
     }
   }
-  // fetchContent() {
-  //   const API_KEY = '22963284-23f543f8627e95ac39317c785';
-  //   const BASE_URL = 'https://pixabay.com/api';
-  //   const url = `${BASE_URL}/?image_type=photo&orientation=horizontal&q=${this.state.text}&page=${this.state.page}&per_page=12&key=${API_KEY}`;
-  //   return fetch(url).then(res => {
-  //     if (res.ok) {
-  //       return res.json();
-  //     }
 
-  //     return Promise.reject(new Error(`Нет покемона с именем ${this.state.text}`));
-  //   });
-  // }
   handleFormSubmit = text => {
     this.setState({ text });
   };
+
+  toggleModal = () => {
+    this.setState(({ showModal }) => ({
+      showModal: !showModal,
+    }));
+  };
+
   render() {
-    const { loading, images, text } = this.state;
+    const { images, error, status, showModal, largeImageURL } = this.state;
     return (
       <Container>
         <Searchbar onSubmit={this.handleFormSubmit} />
-        {/* <ImageGallery images={this.state.images} /> */}
-        {loading && <div>Загружаем...</div>}
-        {!images && <div>Введите картинку</div>}
-        {images && (
-          <div>
-            <p>{text}</p>
-            <li>
-              <img src={this.webformatURL} width="600" alt={this.tags} />
-            </li>
-          </div>
+        {status === Status.IDLE && <h2>Введи и будет чудо</h2>}
+        {status === Status.REJECTED && <h1>{error.message}</h1>}
+        {status === Status.PENDING && <Spiner />}
+        {status === Status.RESOLVED && <ImageGallery images={images} />}
+        {showModal && (
+          <Modal onClose={this.toggleModal}>
+            <img src={largeImageURL} alt="" />
+          </Modal>
         )}
       </Container>
     );
