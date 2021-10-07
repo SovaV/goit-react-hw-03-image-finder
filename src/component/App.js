@@ -5,6 +5,7 @@ import Searchbar from './Searchbar/Searchbar';
 import ImageGallery from './ImageGallery/ImageGallery';
 import Spiner from './Loader/Loader';
 import Modal from './Modal/Modal';
+import Button from './Button/Button';
 
 const Status = {
   IDLE: 'idle', // стоїть на місці
@@ -28,31 +29,34 @@ class App extends Component {
   componentDidUpdate(prevProps, prevState) {
     const prevName = prevState.text;
     const nextName = this.state.text;
-    const API_KEY = '22963284-23f543f8627e95ac39317c785';
-    const per_page = 12;
     if (prevName !== nextName) {
-      const { page } = this.state;
-      this.setState({ status: Status.PENDING });
-
-      fetch(
-        `https://pixabay.com/api/?image_type=photo&orientation=horizontal&q=${nextName}&page=${page}&per_page=${per_page}&key=${API_KEY}`,
-      )
-        .then(res => {
-          if (res.ok) {
-            return res.json();
-          }
-          return Promise.reject(new Error(`Нет такой картинки ${nextName}`));
-        })
-        .then(images => {
-          this.setState(state => ({
-            images: [...state.images, ...images.hits],
-            page: page + 1,
-            status: Status.RESOLVED,
-          }));
-        })
-        .catch(error => this.setState({ error, status: Status.REJECTED }));
+      // this.setState({ status: Status.PENDING });
+      this.fetchImg();
     }
   }
+  fetchImg = () => {
+    const API_KEY = '22963284-23f543f8627e95ac39317c785';
+    const per_page = 12;
+    const nextName = this.state.text;
+    const { page } = this.state;
+    fetch(
+      `https://pixabay.com/api/?image_type=photo&orientation=horizontal&q=${nextName}&page=${page}&per_page=${per_page}&key=${API_KEY}`,
+    )
+      .then(res => {
+        if (res.ok) {
+          return res.json();
+        }
+        return Promise.reject(new Error(`Нет такой картинки ${nextName}`));
+      })
+      .then(images => {
+        this.setState(state => ({
+          images: [...state.images, ...images.hits],
+          page: page + 1,
+          status: Status.RESOLVED,
+        }));
+      })
+      .catch(error => this.setState({ error, status: Status.REJECTED }));
+  };
 
   handleFormSubmit = text => {
     this.setState({ text });
@@ -63,7 +67,19 @@ class App extends Component {
       showModal: !showModal,
     }));
   };
-
+  openModal = ({ largeImageURL, showModal }) => {
+    this.setState({ largeImageURL, showModal: !showModal });
+  };
+  scroll = () => {
+    window.scrollTo({
+      top: document.documentElement.scrollHeight,
+      behavior: 'smooth',
+    });
+  };
+  btnFetch = () => {
+    this.fetchImg();
+    // this.scroll();
+  };
   render() {
     const { images, error, status, showModal, largeImageURL } = this.state;
     return (
@@ -72,12 +88,13 @@ class App extends Component {
         {status === Status.IDLE && <h2>Введи и будет чудо</h2>}
         {status === Status.REJECTED && <h1>{error.message}</h1>}
         {status === Status.PENDING && <Spiner />}
-        {status === Status.RESOLVED && <ImageGallery images={images} />}
+        {status === Status.RESOLVED && <ImageGallery images={images} openModal={this.openModal} />}
         {showModal && (
           <Modal onClose={this.toggleModal}>
             <img src={largeImageURL} alt="" />
           </Modal>
         )}
+        {images.length > 0 && <Button onClick={this.btnFetch} />}
       </Container>
     );
   }
