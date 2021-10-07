@@ -30,23 +30,23 @@ class App extends Component {
     const prevName = prevState.text;
     const nextName = this.state.text;
     if (prevName !== nextName) {
-      // this.setState({ status: Status.PENDING });
+      this.setState({ images: [], page: 1, status: Status.PENDING });
       this.fetchImg();
     }
   }
   fetchImg = () => {
     const API_KEY = '22963284-23f543f8627e95ac39317c785';
+    const { page, text } = this.state;
     const per_page = 12;
-    const nextName = this.state.text;
-    const { page } = this.state;
+
     fetch(
-      `https://pixabay.com/api/?image_type=photo&orientation=horizontal&q=${nextName}&page=${page}&per_page=${per_page}&key=${API_KEY}`,
+      `https://pixabay.com/api/?image_type=photo&orientation=horizontal&q=${text}&page=${page}&per_page=${per_page}&key=${API_KEY}`,
     )
       .then(res => {
         if (res.ok) {
           return res.json();
         }
-        return Promise.reject(new Error(`Нет такой картинки ${nextName}`));
+        return Promise.reject(new Error(`Нет такой картинки ${text}`));
       })
       .then(images => {
         this.setState(state => ({
@@ -55,7 +55,13 @@ class App extends Component {
           status: Status.RESOLVED,
         }));
       })
-      .catch(error => this.setState({ error, status: Status.REJECTED }));
+      .catch(error => this.setState({ error, status: Status.REJECTED }))
+      .finally(() => {
+        window.scrollTo({
+          top: document.body.scrollHeight,
+          behavior: 'smooth',
+        });
+      });
   };
 
   handleFormSubmit = text => {
@@ -70,15 +76,9 @@ class App extends Component {
   openModal = ({ largeImageURL, showModal }) => {
     this.setState({ largeImageURL, showModal: !showModal });
   };
-  scroll = () => {
-    window.scrollTo({
-      top: document.documentElement.scrollHeight,
-      behavior: 'smooth',
-    });
-  };
+
   btnFetch = () => {
     this.fetchImg();
-    // this.scroll();
   };
   render() {
     const { images, error, status, showModal, largeImageURL } = this.state;
@@ -87,14 +87,14 @@ class App extends Component {
         <Searchbar onSubmit={this.handleFormSubmit} />
         {status === Status.IDLE && <h2>Введи и будет чудо</h2>}
         {status === Status.REJECTED && <h1>{error.message}</h1>}
-        {status === Status.PENDING && <Spiner />}
         {status === Status.RESOLVED && <ImageGallery images={images} openModal={this.openModal} />}
+        {status === Status.PENDING && <Spiner />}
+        {images.length !== 0 && <Button onClick={this.btnFetch} />}
         {showModal && (
           <Modal onClose={this.toggleModal}>
             <img src={largeImageURL} alt="" />
           </Modal>
         )}
-        {images.length > 0 && <Button onClick={this.btnFetch} />}
       </Container>
     );
   }
