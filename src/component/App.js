@@ -65,7 +65,7 @@ class App extends Component {
   };
 
   handleFormSubmit = text => {
-    this.setState({ text });
+    this.setState({ text, page: 1 });
   };
 
   toggleModal = () => {
