@@ -1,6 +1,4 @@
-// import React from 'react';
 import PropTypes from 'prop-types';
-
 import b from './Button.module.css';
 
 export default function Button({ onClick }) {
