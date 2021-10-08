@@ -57,10 +57,7 @@ class App extends Component {
       })
       .catch(error => this.setState({ error, status: Status.REJECTED }))
       .finally(() => {
-        window.scrollTo({
-          top: document.body.scrollHeight,
-          behavior: 'smooth',
-        });
+        this.scroll();
       });
   };
 
@@ -79,6 +76,12 @@ class App extends Component {
 
   btnFetch = () => {
     this.fetchImg();
+  };
+  scroll = () => {
+    window.scrollTo({
+      top: document.body.scrollHeight,
+      behavior: 'smooth',
+    });
   };
   render() {
     const { images, error, status, showModal, largeImageURL } = this.state;
