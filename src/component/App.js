@@ -24,6 +24,7 @@ class App extends Component {
     status: Status.IDLE,
     showModal: false,
     largeImageURL: null,
+    per_page: 12,
   };
 
   componentDidUpdate(prevProps, prevState) {
@@ -36,11 +37,10 @@ class App extends Component {
   }
   fetchImg = () => {
     const API_KEY = '22963284-23f543f8627e95ac39317c785';
-    const { page, text } = this.state;
-    const per_page = 12;
+    const { page, text, per_page } = this.state;
 
     fetch(
-      `https://pixabay.com/api/?image_type=photo&orientation=horizontal&q=${text}&page=${page}&per_page=${per_page}&key=${API_KEY}`,
+      `https://pixabay.com/api/?q=${text}&page=${page}&key=${API_KEY}&image_type=photo&orientation=horizontal&per_page=${per_page}`,
     )
       .then(res => {
         if (res.ok) {
@@ -48,9 +48,9 @@ class App extends Component {
         }
         return Promise.reject(new Error(`Нет такой картинки ${text}`));
       })
-      .then(images => {
-        this.setState(state => ({
-          images: [...state.images, ...images.hits],
+      .then(({ hits }) => {
+        this.setState(({ images }) => ({
+          images: [...images, ...hits],
           page: page + 1,
           status: Status.RESOLVED,
         }));
