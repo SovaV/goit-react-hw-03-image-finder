@@ -10,9 +10,10 @@ export default function ImageGallery({ images, openModal }) {
       {images.map(({ webformatURL, id, user, largeImageURL }) => (
         <ImageGalleryItem
           key={id}
-          alt={user}
+          user={user}
           webformatURL={webformatURL}
-          openModal={() => openModal({ largeImageURL })}
+          largeImageURL={largeImageURL}
+          openModal={openModal}
         />
       ))}
     </ul>
@@ -24,7 +25,6 @@ ImageGallery.propTypes = {
       id: PropTypes.number.isRequired,
       user: PropTypes.string.isRequired,
       webformatURL: PropTypes.string.isRequired,
-      largeImageURL: PropTypes.string.isRequired,
     }),
   ),
   openModal: PropTypes.func.isRequired,

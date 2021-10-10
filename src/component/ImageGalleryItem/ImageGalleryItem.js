@@ -9,18 +9,17 @@ export default function ImageGalleryItem({ webformatURL, user, openModal, largeI
       <img
         src={webformatURL}
         alt={user}
+        data-source={largeImageURL}
         className={ii.image}
-        onClick={() => openModal({ largeImageURL })}
+        onClick={openModal}
       />
     </li>
   );
 }
 
 ImageGalleryItem.propTypes = {
-  images: PropTypes.shape({
-    webformatURL: PropTypes.string.isRequired,
-    largeImageURL: PropTypes.string.isRequired,
-    user: PropTypes.string,
-  }),
+  webformatURL: PropTypes.string.isRequired,
+  user: PropTypes.string.isRequired,
   openModal: PropTypes.func.isRequired,
+  largeImageURL: PropTypes.string.isRequired,
 };

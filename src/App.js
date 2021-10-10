@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
-import Container from '../component/Container/Container';
+import Container from './component/Container/Container';
 //====================================
-import Searchbar from './Searchbar/Searchbar';
-import ImageGallery from './ImageGallery/ImageGallery';
-import Spiner from './Loader/Loader';
-import Modal from './Modal/Modal';
-import Button from './Button/Button';
+import Searchbar from './component/Searchbar/Searchbar';
+import ImageGallery from './component/ImageGallery/ImageGallery';
+import Spiner from './component/Loader/Loader';
+import Modal from './component/Modal/Modal';
+import Button from './component/Button/Button';
 
 const Status = {
   IDLE: 'idle', // стоїть на місці
@@ -23,8 +23,7 @@ class App extends Component {
     error: null,
     status: Status.IDLE,
     showModal: false,
-    largeImageURL: null,
-    per_page: 12,
+    largeImageURL: '',
   };
 
   componentDidUpdate(prevProps, prevState) {
@@ -37,7 +36,8 @@ class App extends Component {
   }
   fetchImg = () => {
     const API_KEY = '22963284-23f543f8627e95ac39317c785';
-    const { page, text, per_page } = this.state;
+    const { page, text } = this.state;
+    const per_page = 12;
 
     fetch(
       `https://pixabay.com/api/?q=${text}&page=${page}&key=${API_KEY}&image_type=photo&orientation=horizontal&per_page=${per_page}`,
@@ -51,53 +51,49 @@ class App extends Component {
       .then(({ hits }) => {
         this.setState(({ images }) => ({
           images: [...images, ...hits],
-          page: page + 1,
           status: Status.RESOLVED,
+          page: page + 1,
         }));
+
+        if (page !== 1) {
+          window.scrollTo({
+            top: document.body.scrollHeight,
+            behavior: 'smooth',
+          });
+        }
       })
-      .catch(error => this.setState({ error, status: Status.REJECTED }))
-      .finally(() => {
-        this.scroll();
-      });
+      .catch(error => this.setState({ error, status: Status.REJECTED }));
   };
 
   handleFormSubmit = text => {
     this.setState({ text, page: 1 });
   };
-
+  openModal = e => {
+    this.setState({ largeImageURL: e.target.dataset.source });
+    this.toggleModal();
+  };
   toggleModal = () => {
     this.setState(({ showModal }) => ({
       showModal: !showModal,
     }));
   };
-  openModal = ({ largeImageURL, showModal }) => {
-    this.setState({ largeImageURL, showModal: !showModal });
-  };
 
   btnFetch = () => {
     this.fetchImg();
   };
-  scroll = () => {
-    window.scrollTo({
-      top: document.body.scrollHeight,
-      behavior: 'smooth',
-    });
-  };
+
   render() {
     const { images, error, status, showModal, largeImageURL } = this.state;
+    const resolvedImg = status === Status.RESOLVED && images.length > 11;
     return (
       <Container>
         <Searchbar onSubmit={this.handleFormSubmit} />
         {status === Status.IDLE && <h2>Введи и будет чудо</h2>}
         {status === Status.REJECTED && <h1>{error.message}</h1>}
-        {status === Status.RESOLVED && <ImageGallery images={images} openModal={this.openModal} />}
+        {resolvedImg && <ImageGallery images={images} openModal={this.openModal} />}
         {status === Status.PENDING && <Spiner />}
         {images.length !== 0 && <Button onClick={this.btnFetch} />}
-        {showModal && (
-          <Modal onClose={this.toggleModal}>
-            <img src={largeImageURL} alt="" />
-          </Modal>
-        )}
+        {showModal && <Modal onClose={this.toggleModal} largeImageURL={largeImageURL} />}
       </Container>
     );
   }

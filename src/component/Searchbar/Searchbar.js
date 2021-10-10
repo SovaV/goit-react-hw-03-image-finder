@@ -1,9 +1,17 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import s from './Searchbar.module.css';
 
 class Searchbar extends Component {
+  static propTypes = {
+    onSubmit: PropTypes.func.isRequired,
+  };
+
   state = {
     text: '',
+    webformatURL: '',
+    largeImageURL: '',
+    id: '',
   };
 
   hendleChange = e => {
