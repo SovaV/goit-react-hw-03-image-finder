@@ -5,8 +5,6 @@ function fetchImages(text, page, per_page = 12, API_KEY = '22963284-23f543f8627e
     if (response.ok) {
       return response.json();
     }
-
-    // return Promise.reject(new Error('No response from server'));
   });
 }
 
