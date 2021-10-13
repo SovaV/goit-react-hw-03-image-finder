@@ -6,10 +6,10 @@ function fetchImages(text, page, per_page = 12, API_KEY = '22963284-23f543f8627e
       return response.json();
     }
 
-    return Promise.reject(new Error('No response from server'));
+    // return Promise.reject(new Error('No response from server'));
   });
 }
 
-const api = { fetchImages };
+const imagesAPI = { fetchImages };
 
-export default api;
+export default imagesAPI;
