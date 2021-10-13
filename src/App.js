@@ -6,6 +6,7 @@ import ImageGallery from './component/ImageGallery/ImageGallery';
 import Spiner from './component/Loader/Loader';
 import Modal from './component/Modal/Modal';
 import Button from './component/Button/Button';
+import imagesAPI from './component/services/Api';
 
 const Status = {
   IDLE: 'idle', // стоїть на місці
@@ -29,41 +30,34 @@ class App extends Component {
   componentDidUpdate(prevProps, prevState) {
     const prevName = prevState.text;
     const nextName = this.state.text;
+    const nextPage = this.state.page;
+
     if (prevName !== nextName) {
       this.setState({ images: [], page: 1, status: Status.PENDING });
-      this.fetchImg();
+
+      imagesAPI
+        .fetchImages(nextName, nextPage)
+        .then(images => {
+          if (images.total !== 0) {
+            this.setState(prevState => ({
+              images: [...prevState.images, ...images.hits],
+              status: Status.RESOLVED,
+            }));
+            if (nextPage !== 1) {
+              this.setState({ images: [], page: +1, status: Status.PENDING });
+              window.scrollTo({
+                top: document.body.scrollHeight,
+                behavior: 'smooth',
+              });
+            }
+            return;
+          }
+
+          return Promise.reject(new Error('не верный ввод'));
+        })
+        .catch(error => this.setState({ error, status: Status.REJECTED }));
     }
   }
-  fetchImg = () => {
-    const API_KEY = '22963284-23f543f8627e95ac39317c785';
-    const { page, text } = this.state;
-    const per_page = 12;
-
-    fetch(
-      `https://pixabay.com/api/?q=${text}&page=${page}&key=${API_KEY}&image_type=photo&orientation=horizontal&per_page=${per_page}`,
-    )
-      .then(res => {
-        if (res.ok) {
-          return res.json();
-        }
-        return Promise.reject(new Error(`Нет такой картинки ${text}`));
-      })
-      .then(({ hits }) => {
-        this.setState(({ images }) => ({
-          images: [...images, ...hits],
-          status: Status.RESOLVED,
-          page: page + 1,
-        }));
-
-        if (page !== 1) {
-          window.scrollTo({
-            top: document.body.scrollHeight,
-            behavior: 'smooth',
-          });
-        }
-      })
-      .catch(error => this.setState({ error, status: Status.REJECTED }));
-  };
 
   handleFormSubmit = text => {
     this.setState({ text, page: 1 });
@@ -77,9 +71,11 @@ class App extends Component {
       showModal: !showModal,
     }));
   };
-
   btnFetch = () => {
-    this.fetchImg();
+    this.setState(prevState => ({
+      page: prevState.page + 1,
+    }));
+    console.log('sdfsdfsdf');
   };
 
   render() {
